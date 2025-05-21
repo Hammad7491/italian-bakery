@@ -10,10 +10,10 @@
   <div class="card border-primary shadow-sm mb-5">
     <div class="card-header d-flex align-items-center"
          style="background-color: #041930; padding: .5rem; border-top-left-radius: .5rem; border-top-right-radius: .5rem;">
-      <!-- SVG Ingredient Icon with gold color -->
+      <!-- SVG Ingredient Icon -->
       <svg class="me-2" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
            style="width: 1.6vw; height: 1.6vw; color: #e2ae76; fill: currentColor;">
-        <!-- ... SVG paths omitted for brevity ... -->
+        <!-- (your SVG paths here) -->
       </svg>
 
       <h5 class="mb-0 fw-bold" style="color: #e2ae76; font-size: 1.6vw;">
@@ -97,7 +97,7 @@
             </tr>
           </thead>
           <tbody>
-            @forelse($ingredients as $ing)
+            @foreach($ingredients as $ing)
               <tr>
                 <td>{{ $ing->ingredient_name }}</td>
                 <td>€{{ number_format($ing->price_per_kg, 2) }}</td>
@@ -113,18 +113,15 @@
                         method="POST"
                         class="d-inline"
                         onsubmit="return confirm('Eliminare questo ingrediente?');">
-                    @csrf @method('DELETE')
+                    @csrf
+                    @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-red" title="Elimina">
                       <i class="bi bi-trash"></i>
                     </button>
                   </form>
                 </td>
               </tr>
-            @empty
-              <tr>
-                <td colspan="4" class="text-muted">Nessun ingrediente trovato.</td>
-              </tr>
-            @endforelse
+            @endforeach
           </tbody>
         </table>
       </div>
@@ -133,6 +130,7 @@
 
 </div>
 @endsection
+
 
 <style>
   /* Table header */
@@ -198,20 +196,21 @@
   }
 </style>
 
+
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize DataTable with explicit column defs
   if (window.$ && $.fn.DataTable) {
     $('#ingredientsTable').DataTable({
       responsive: true,
       columns: [
-        null,
-        null,
-        null,
-        { orderable: false }
+        null, // Nome
+        null, // Prezzo / kg
+        null, // Ultimo agg.
+        { orderable: false } // Azioni
       ],
       language: {
+        emptyTable: "Nessun ingrediente trovato.",
         search: "_INPUT_",
         searchPlaceholder: "Cerca ingredienti...",
         lengthMenu: "Mostra _MENU_ elementi",

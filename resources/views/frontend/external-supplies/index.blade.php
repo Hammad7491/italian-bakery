@@ -33,7 +33,7 @@
       <div class="row g-3 align-items-end">
         <div class="col-md-5">
           <label for="filterClient" class="form-label fw-semibold">Filtra per Cliente</label>
-          <input id="filterClient" type="text" class="form-control form-control-lg" placeholder="es. Bar Jolly instead">
+          <input id="filterClient" type="text" class="form-control form-control-lg" placeholder="es. Bar Jolly">
         </div>
         <div class="col-md-5">
           <label for="filterDate" class="form-label fw-semibold">Filtra per Data</label>

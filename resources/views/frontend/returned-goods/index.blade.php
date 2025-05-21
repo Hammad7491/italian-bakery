@@ -14,7 +14,7 @@
       class="me-2"
       style="width: 1.5em; height: 1.0em; color: #e2ae76; font-size: 1.7vw;">
     </iconify-icon>
-    <h4 class="mb-0 fw-bold" style="color: #e2ae76;"> Forniture Esterne & Resi Resi</h4>
+    <h4 class="mb-0 fw-bold" style="color: #e2ae76;"> Forniture Esterne & Resi </h4>
   </div>
 
   {{-- Filters --}}

@@ -11,9 +11,7 @@
                 </button>
             </div>
         </div>
-        <div class="col-auto">
-            <h4>Benvenuto, {{ auth()->user()->name }}!</h4>
-        </div>
+       
         <div class="col-auto">
             <div class="d-flex flex-wrap align-items-center gap-3">
                 <button type="button" data-theme-toggle

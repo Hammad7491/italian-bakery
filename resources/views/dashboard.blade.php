@@ -2,15 +2,24 @@
 
 @section('title', 'Cruscotto')
 
- @section('content')
+@section('content')
+
+  {{-- Beautiful Welcome Banner --}}
+  <div class="col-12 mb-4">
+  <div
+    class="alert text-center fw-bold fs-4 rounded-pill"
+    style="background-color: #041930; color: #e2ae76;"
+  >
+    Benvenuto, {{ auth()->user()->name }}!
+  </div>
+</div>
 
 
 
 
 
 
-
-     <div class="dashboard-main-body">
+<div class="dashboard-main-body">
 
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
     <h6 class="fw-semibold mb-0">Cruscotto</h6>
@@ -27,7 +36,7 @@
 </div>
 
 
-         <div class="row gy-4">
+<div class="row gy-4">
 
 
 
@@ -221,7 +230,7 @@
 
 
 
-            @can('Dashboard(Sales, Costs)')
+ @can('Dashboard(Sales, Costs)')
     <div class="col-xxl-12">
         <div class="card h-100 radius-8 border-0">
             <div class="card-body p-24">
@@ -363,7 +372,7 @@
 
 
              {{-- Top 5 Wasted Products --}}
-             <div class="col-xxl-6 mb-4">
+<div class="col-xxl-6 mb-4">
     <div class="card h-100">
         <div
             class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
@@ -434,7 +443,7 @@
 
 
          {{-- resources/views/dashboard.blade.php --}}
-         <div class="row gy-4 mb-4">
+<div class="row gy-4 mb-4">
              {{-- Return vs Used --}}
             <div class="col-xxl-4 col-sm-6">
     <div class="card h-100 radius-8 border-0">
@@ -449,7 +458,7 @@
 
 
              {{-- Production by Chef --}}
-             <div class="col-xxl-4 col-sm-6">
+<div class="col-xxl-4 col-sm-6">
     <div class="card h-100 radius-8 border-0">
         <div class="card-body p-24">
             <h6 class="text-lg fw-semibold mb-3">Produzione per Pasticcere</h6>
