@@ -178,10 +178,10 @@
 
                 {{-- Chef Filter --}}
                 <div class="col-md-3">
-                    <label class="form-label small">Chef</label>
+                    <label class="form-label small">Pasticcere</label>
                     <div class="dropdown" data-bs-auto-close="outside">
                         <button class="btn btn-outline-success w-100 text-start dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-lines-fill me-1"></i> Chef
+                            <i class="bi bi-person-lines-fill me-1"></i> Pasticcere
                         </button>
                         <div class="dropdown-menu p-3">
                             @foreach ($allChefs as $c)

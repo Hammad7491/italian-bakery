@@ -16,7 +16,7 @@
       <!-- Dettagli -->
       <div class="row row-cols-1 row-cols-md-2 g-4 mb-4" style="width: 70%;">
         <div class="col">
-          <h6 class="text-uppercase text-muted small mb-1">Nome Chef</h6>
+          <h6 class="text-uppercase text-muted small mb-1"> Nome Pasticceri</h6>
           <p class="fs-3 fw-bold mb-0">{{ $pastryChef->name }}</p>
         </div>
         <div class="col">

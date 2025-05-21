@@ -22,13 +22,13 @@
         @if(isset($pastryChef)) @method('PUT') @endif
 
         <div class="col-md-6">
-          <label for="Name" class="form-label fw-semibold">Nome Chef</label>
+          <label for="Name" class="form-label fw-semibold">Nome Pasticceri</label>
           <input type="text"
                  id="Name"
                  name="name"
                  class="form-control form-control-lg"
                  value="{{ old('name', $pastryChef->name ?? '') }}"
-                 placeholder="Inserisci il nome del pasticcere"
+                 placeholder="Nome Pasticceri"
                  required>
           <div class="invalid-feedback">
             Per favore inserisci il nome del pasticcere.

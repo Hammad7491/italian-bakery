@@ -72,7 +72,7 @@ class DashboardController extends Controller
         $values = $monthlyData->pluck('total')->toArray();
 
         $chart = (new LarapexChart)->barChart()
-            ->setTitle('Monthly Sales')
+            ->setTitle('Vendite Mensili')
             ->setSubtitle('Current Year')
             ->addData('Revenue', $values)
             ->setXAxis($labels);
@@ -172,7 +172,7 @@ $totalReturned = ReturnedGoodRecipe::join('returned_goods','returned_goods.id','
     ->sum('qty');
 
 $returnRateChart = (new LarapexChart)->pieChart()
-    ->setTitle('Return vs. Used')
+    ->setTitle('Reso vs. Usato')
     ->addData([$totalReturned, $totalSupplied - $totalReturned])
     ->setLabels(['Returned','Used']);
 

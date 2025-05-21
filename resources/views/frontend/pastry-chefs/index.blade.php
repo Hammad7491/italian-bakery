@@ -10,7 +10,7 @@
     <div class="card-header d-flex align-items-center" style="background-color: #041930;">
       <i class="bi bi-egg-fried fs-4 me-2" style="color: #e2ae76;"></i>
       <h5 class="mb-0 fw-bold" style="color: #e2ae76;">
-        {{ isset($pastryChef) ? 'Modifica Chef' : 'Aggiungi Chef' }}
+        {{ isset($pastryChef) ? 'Modifica Pasticceri' : 'Aggiungi Pasticceri' }}
       </h5>
     </div>
     <div class="card-body">
@@ -23,27 +23,27 @@
         @if(isset($pastryChef)) @method('PUT') @endif
 
         <div class="col-md-4">
-          <label for="Name" class="form-label fw-semibold">Nome Chef</label>
+          <label for="Name" class="form-label fw-semibold">Nome Pasticceri</label>
           <input 
             type="text" 
             id="Name" 
             name="name" 
             class="form-control form-control-lg"
             value="{{ old('name', $pastryChef->name ?? '') }}"
-            placeholder="Inserisci Nome Chef" 
+            placeholder="Inserisci Nome Pasticceri" 
             required>
           <div class="invalid-feedback">Per favore inserisci il nome del Chef.</div>
         </div>
 
         <div class="col-md-4">
-          <label for="Email" class="form-label fw-semibold">Email Chef</label>
+          <label for="Email" class="form-label fw-semibold">Email Pasticceri</label>
           <input 
             type="email" 
             id="Email" 
             name="email" 
             class="form-control form-control-lg"
             value="{{ old('email', $pastryChef->email ?? '') }}"
-            placeholder="Inserisci Email Chef">
+            placeholder="Inserisci Email Pasticceri">
           <div class="invalid-feedback">Per favore inserisci l'email del Chef.</div>
         </div>
 
@@ -55,8 +55,8 @@
             name="phone" 
             class="form-control form-control-lg"
             value="{{ old('phone', $pastryChef->phone ?? '') }}"
-            placeholder="Inserisci Telefono Chef">
-          <div class="invalid-feedback">Per favore inserisci il telefono del Chef.</div>
+            placeholder="Inserisci Telefono Pasticceri">
+          <div class="invalid-feedback">Per favore inserisci il telefono del Pasticceri.</div>
         </div>
 
         <div class="col-12 text-end">
@@ -73,7 +73,7 @@
   <div class="card border-primary shadow-sm">
     <div class="card-header d-flex align-items-center" style="background-color: #041930;">
       <i class="bi bi-people fs-4 me-2" style="color: #e2ae76;"></i>
-      <h5 class="mb-0 fw-bold" style="color: #e2ae76;">Showcase Pasticceri</h5>
+      <h5 class="mb-0 fw-bold" style="color: #e2ae76;">Lista Pasticceri</h5>
     </div>
     <div class="card-body table-responsive">
       <table
@@ -211,10 +211,8 @@
           infoEmpty:     "Nessun elemento disponibile",
           zeroRecords:   "Nessuna corrispondenza trovata",
           paginate: {
-            first:    "Primo",
-            last:     "Ultimo",
-            next:     "Successivo",
-            previous: "Precedente"
+           
+           
           }
         }
       });
