@@ -97,7 +97,7 @@
           <select id="template_action" name="template_action" class="form-select form-control-lg">
             <option value="none"     {{ $default=='none'     ? 'selected' : '' }}>Solo Salva</option>
             <option value="template" {{ $default=='template' ? 'selected' : '' }}>Salva come Modello</option>
-            <option value="both"     {{ $default=='both'     ? 'selected' : '' }}>Salva e Modello</option>
+           
           </select>
         </div>
 

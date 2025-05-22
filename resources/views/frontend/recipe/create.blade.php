@@ -952,8 +952,8 @@
                     beforeLabel.textContent = 'Costo per pz prima dell’imballaggio';
                     afterLabel.textContent  = ' Costo per pz dopo l’imballaggio';
                 } else {
-                    beforeLabel.textContent = 'Cost / kg Before Packing';
-                    afterLabel.textContent  = 'Cost / kg After Packing';
+                    beforeLabel.textContent = 'Costo €/kg prima dell’imballaggio';
+    afterLabel.textContent  = 'Costo €/kg dopo dell’imballaggio';
                 }
                 document.getElementById('pieceInputs').classList.toggle('d-none', !modePiece.checked);
                 document.getElementById('kgInputs')   .classList.toggle('d-none',  modePiece.checked);

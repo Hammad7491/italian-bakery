@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/DashboardController.php
 
 namespace App\Http\Controllers;
 
@@ -12,16 +11,18 @@ use App\Models\Showcase;
 use App\Models\ShowcaseRecipe;
 use App\Models\ProductionDetail;
 use App\Models\ReturnedGoodRecipe;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use App\Models\ExternalSupplyRecipe;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
+use App\Http\Controllers\Controller;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // Imposto la localizzazione italiana per tutte le date
+        Carbon::setLocale('it');
 
         $user = Auth::user();
 
@@ -35,17 +36,17 @@ class DashboardController extends Controller
             $visibleUserIds = collect([$user->id, $user->created_by]);
         }
 
-           // 2) Core metrics
-        $totalUsers = User::whereIn('id', $visibleUserIds)->count();
-        $totalRecipes = Recipe::whereIn('user_id', $visibleUserIds)->count();
-        $totalShowcases = Showcase::whereIn('user_id', $visibleUserIds)->count();
+        // 2) Core metrics
+        $totalUsers          = User::whereIn('id', $visibleUserIds)->count();
+        $totalRecipes        = Recipe::whereIn('user_id', $visibleUserIds)->count();
+        $totalShowcases      = Showcase::whereIn('user_id', $visibleUserIds)->count();
 
-        $year = Carbon::now()->year;
-        $totalSaleThisYear = Showcase::whereIn('user_id', $visibleUserIds)
+        $year                = Carbon::now()->year;
+        $totalSaleThisYear   = Showcase::whereIn('user_id', $visibleUserIds)
             ->whereYear('showcase_date', $year)
             ->sum('total_revenue');
 
-        $totalWasteThisYear = ShowcaseRecipe::whereIn('user_id', $visibleUserIds)
+        $totalWasteThisYear  = ShowcaseRecipe::whereIn('user_id', $visibleUserIds)
             ->whereHas('showcase', fn($q) => $q->whereYear('showcase_date', $year))
             ->sum('waste');
 
@@ -58,7 +59,7 @@ class DashboardController extends Controller
         $plus       = Showcase::whereIn('user_id', $visibleUserIds)->sum('plus');
         $realMargin = Showcase::whereIn('user_id', $visibleUserIds)->sum('real_margin');
 
-        // 3) Monthly Sales Chart (current year)
+        // 3) Vendite Mensili (anno corrente)
         $monthlyData = Showcase::selectRaw("MONTH(showcase_date) AS month, SUM(total_revenue) AS total")
             ->whereIn('user_id', $visibleUserIds)
             ->whereYear('showcase_date', Carbon::now()->year)
@@ -67,17 +68,20 @@ class DashboardController extends Controller
             ->get();
 
         $labels = $monthlyData->pluck('month')
-            ->map(fn($m) => Carbon::createFromDate(null, $m, 1)->format('M'))
-            ->toArray();
+            ->map(fn($m) =>
+                Carbon::createFromDate(null, $m, 1)
+                      ->locale('it')
+                      ->isoFormat('MMM')
+            )->toArray();
         $values = $monthlyData->pluck('total')->toArray();
 
         $chart = (new LarapexChart)->barChart()
             ->setTitle('Vendite Mensili')
-            ->setSubtitle('Current Year')
-            ->addData('Revenue', $values)
+            ->setSubtitle('Anno Corrente')
+            ->addData('Ricavi', $values)
             ->setXAxis($labels);
 
-        // 4) Cost vs Income Chart (this month)
+        // 4) Costi e Ricavi (mese corrente)
         $start = Carbon::now()->startOfMonth();
         $end   = Carbon::now()->endOfMonth();
         $monthlyCost   = Cost::whereIn('user_id', $visibleUserIds)
@@ -86,42 +90,42 @@ class DashboardController extends Controller
             ->whereBetween('date', [$start, $end])->sum('amount');
 
         $comparisonChart = (new LarapexChart)->barChart()
-            ->setTitle(' Costi e Ricavi')
-            ->setSubtitle(Carbon::now()->format('F Y'))
-            ->addData('Cost', [$monthlyCost])
-            ->addData('Income', [$monthlyIncome])
-            ->setXAxis([Carbon::now()->format('F')]);
+            ->setTitle('Costi e Ricavi')
+            ->setSubtitle(Carbon::now()->locale('it')->isoFormat('MMMM YYYY'))
+            ->addData('Costi', [$monthlyCost])
+            ->addData('Ricavi', [$monthlyIncome])
+            ->setXAxis([Carbon::now()->locale('it')->isoFormat('MMMM')]);
 
-        // 5) Yearly Costs Comparison
-        $thisYear = Carbon::now()->year;
-        $lastYear = Carbon::now()->subYear()->year;
+        // 5) Confronto Costi Annuali
+        $thisYear       = Carbon::now()->year;
+        $lastYear       = Carbon::now()->subYear()->year;
         $yearlyCostThis = Cost::whereIn('user_id', $visibleUserIds)
             ->whereYear('due_date', $thisYear)->sum('amount');
         $yearlyCostLast = Cost::whereIn('user_id', $visibleUserIds)
             ->whereYear('due_date', $lastYear)->sum('amount');
 
         $yearlyCostChart = (new LarapexChart)->barChart()
-            ->setTitle(' Costi annuali')
+            ->setTitle('Costi Annuali')
             ->setSubtitle("$lastYear vs $thisYear")
-            ->addData('Costs', [$yearlyCostLast, $yearlyCostThis])
+            ->addData('Costi', [$yearlyCostLast, $yearlyCostThis])
             ->setXAxis([$lastYear, $thisYear]);
 
-        // 6) Yearly Income Comparison
+        // 6) Confronto Ricavi Annuali
         $yearlyIncomeThis = Income::whereIn('user_id', $visibleUserIds)
             ->whereYear('date', $thisYear)->sum('amount');
         $yearlyIncomeLast = Income::whereIn('user_id', $visibleUserIds)
             ->whereYear('date', $lastYear)->sum('amount');
 
         $yearlyIncomeChart = (new LarapexChart)->barChart()
-            ->setTitle('Ricavi annuali')
+            ->setTitle('Ricavi Annuali')
             ->setSubtitle("$lastYear vs $thisYear")
-            ->addData('Income', [$yearlyIncomeLast, $yearlyIncomeThis])
+            ->addData('Ricavi', [$yearlyIncomeLast, $yearlyIncomeThis])
             ->setXAxis([$lastYear, $thisYear]);
 
-        // 7) Top 5 Sold & Wasted Products
+        // 7) Top 5 Prodotti Venduti & Sprechi
         $topSold = ShowcaseRecipe::with(['recipe' => function ($query) {
-            $query->select('id', 'recipe_name');
-        }])
+                $query->select('id', 'recipe_name');
+            }])
             ->whereIn('user_id', $visibleUserIds)
             ->selectRaw('recipe_id, SUM(sold) as sold')
             ->groupBy('recipe_id')
@@ -130,8 +134,8 @@ class DashboardController extends Controller
             ->get();
 
         $topWasted = ShowcaseRecipe::with(['recipe' => function ($query) {
-            $query->select('id', 'recipe_name');
-        }])
+                $query->select('id', 'recipe_name');
+            }])
             ->whereIn('user_id', $visibleUserIds)
             ->selectRaw('recipe_id, SUM(waste) as waste')
             ->groupBy('recipe_id')
@@ -139,140 +143,116 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // 8) Charts for Sold & Wasted
-$soldValues = $topSold->pluck('sold')->map(fn($v) => (int) $v)->toArray();
-$soldLabels = $topSold->map(fn($item) => $item->recipe->recipe_name ?? 'Unknown')->toArray();
+        $soldValues = $topSold->pluck('sold')->map(fn($v) => (int) $v)->toArray();
+        $soldLabels = $topSold->map(fn($item) => $item->recipe->recipe_name ?? 'Sconosciuto')->toArray();
 
-$soldPieChart = (new LarapexChart)->donutChart()
-    ->setTitle('Sold Distribution')
-    ->addData($soldValues)
-    ->setLabels($soldLabels);
+        $soldPieChart = (new LarapexChart)->donutChart()
+            ->setTitle('Distribuzione Vendite')
+            ->addData($soldValues)
+            ->setLabels($soldLabels);
 
-        $wastedLabels = $topWasted->map(fn($item) => $item->recipe->recipe_name ?? 'Unknown')->toArray();
+        $wastedLabels = $topWasted->map(fn($item) => $item->recipe->recipe_name ?? 'Sconosciuto')->toArray();
         $wastedValues = $topWasted->pluck('waste')->toArray();
+
         $wastedPieChart = (new LarapexChart)->donutChart()
-            ->setTitle('Waste Distribution')
+            ->setTitle('Distribuzione Sprechi')
             ->addData($wastedValues)
             ->setLabels($wastedLabels);
-            
 
+        // 8) Incidenza Costi vs Ricavi
+        $totalCost   = $monthlyCost;
+        $totalRev    = $monthlyIncome;
+        $nettoAmount = $totalRev - $totalCost;
 
+        $incidenceChart = (new LarapexChart)->pieChart()
+            ->setTitle('Incidenza Costi vs Ricavi')
+            ->addData([$totalCost, $totalRev, $nettoAmount])
+            ->setLabels(['Costi', 'Ricavi', 'Netto']);
 
+        // 9) Produzione per Pasticcere
+        $prodByChef = ProductionDetail::selectRaw('pastry_chef_id, SUM(quantity) AS qty')
+            ->whereIn('user_id', $visibleUserIds)
+            ->groupBy('pastry_chef_id')
+            ->with('chef:id,name')
+            ->orderByDesc('qty')
+            ->get();
 
+        $chefLabels = $prodByChef->pluck('chef.name')->toArray();
+        $chefValues = $prodByChef->pluck('qty')->toArray();
 
+        $chefChart = (new LarapexChart)->barChart()
+            ->setTitle('Produzione per Pasticcere')
+            ->addData('Unità', $chefValues)
+            ->setXAxis($chefLabels);
 
+        // 10) Andamento Produzione vs Spreco (annuale)
+        $prodTrend  = ProductionDetail::selectRaw('MONTH(production_date) AS m, SUM(quantity) AS produced')
+            ->join('productions','productions.id','production_details.production_id')
+            ->whereIn('production_details.user_id',$visibleUserIds)
+            ->whereYear('productions.production_date',$year)
+            ->groupBy('m')->orderBy('m')->get();
 
+        $wasteTrend = ShowcaseRecipe::selectRaw('MONTH(showcase_date) AS m, SUM(waste) AS waste')
+            ->join('showcases','showcases.id','showcase_recipes.showcase_id')
+            ->whereIn('showcase_recipes.user_id',$visibleUserIds)
+            ->whereYear('showcases.showcase_date',$year)
+            ->groupBy('m')->orderBy('m')->get();
 
+        $labelsTrend = $prodTrend->pluck('m')
+            ->map(fn($m) =>
+                Carbon::createFromDate(null, $m, 1)
+                      ->locale('it')
+                      ->isoFormat('MMM')
+            )->toArray();
 
+        $prodVals  = $prodTrend->pluck('produced')->toArray();
+        $wasteVals = $wasteTrend->pluck('waste')->toArray();
 
-            // Controller
-$totalSupplied = ExternalSupplyRecipe::whereIn('user_id',$visibleUserIds)->sum('qty');
-$totalReturned = ReturnedGoodRecipe::join('returned_goods','returned_goods.id','returned_good_recipes.returned_good_id')
-    ->whereIn('returned_goods.user_id',$visibleUserIds)
-    ->sum('qty');
+        $prodWasteChart = (new LarapexChart)->areaChart()
+            ->setTitle('Produzione vs Spreco')
+            ->addData('Prodotto', $prodVals)
+            ->addData('Spreco',   $wasteVals)
+            ->setXAxis($labelsTrend);
 
-$returnRateChart = (new LarapexChart)->pieChart()
-    ->setTitle('Reso vs. Usato')
-    ->addData([$totalReturned, $totalSupplied - $totalReturned])
-    ->setLabels(['Returned','Used']);
+        // 11) Ripartizione dei costi per categoria
+        $costByCategory = Cost::join('cost_categories', 'costs.category_id', '=', 'cost_categories.id')
+            ->whereIn('costs.user_id', $visibleUserIds)
+            ->groupBy('cost_categories.id', 'cost_categories.name')
+            ->select(
+                'cost_categories.name as category',
+                DB::raw('SUM(costs.amount) as total')
+            )
+            ->get();
 
-    // Controller
-$totalSupplied = ExternalSupplyRecipe::whereIn('user_id',$visibleUserIds)->sum('qty');
-$totalReturned = ReturnedGoodRecipe::join('returned_goods','returned_goods.id','returned_good_recipes.returned_good_id')
-    ->whereIn('returned_goods.user_id',$visibleUserIds)
-    ->sum('qty');
+        $categoryLabels = $costByCategory->pluck('category')->toArray();
+        $categoryValues = $costByCategory->pluck('total')->map(fn($v) => (float) $v)->toArray();
 
-$returnRateChart = (new LarapexChart)->pieChart()
-    ->setTitle('Reso vs. Usato')
-    ->addData([$totalReturned, $totalSupplied - $totalReturned])
-    ->setLabels(['Returned','Used']);
+        $costCategoryChart = (new LarapexChart)->donutChart()
+            ->setTitle('Ripartizione dei costi per categoria')
+            ->addData($categoryValues)
+            ->setLabels($categoryLabels);
 
+        // 12) Resi vs. quantità fornita
+        $totalSupplied = ExternalSupplyRecipe::whereIn('user_id', $visibleUserIds)
+            ->sum('qty');
+        $totalReturned = ReturnedGoodRecipe::join('returned_goods','returned_goods.id','returned_good_recipes.returned_good_id')
+            ->whereIn('returned_goods.user_id', $visibleUserIds)
+            ->sum('qty');
 
-    // Controller
-$prodByChef = ProductionDetail::selectRaw('pastry_chef_id, SUM(quantity) AS qty')
-    ->whereIn('user_id',$visibleUserIds)
-    ->groupBy('pastry_chef_id')
-    ->with('chef:id,name')
-    ->orderByDesc('qty')
-    ->get();
+        $returnRateChart = (new LarapexChart)->pieChart()
+            ->setTitle('Resi vs. Utilizzo')
+            ->addData([
+                $totalReturned,
+                $totalSupplied - $totalReturned
+            ])
+            ->setLabels(['Resi', 'Utilizzati']);
 
-$chefLabels = $prodByChef->pluck('chef.name')->toArray();
-$chefValues = $prodByChef->pluck('qty')->toArray();
+        // 13) Full datasets for JS filtering
+        $fullMonthlyData = $monthlyData->map(fn($row) => [
+            'date'  => Carbon::createFromDate(null, $row->month, 1)->format('Y-m-d'),
+            'total' => $row->total,
+        ])->toArray();
 
-$chefChart = (new LarapexChart)->barChart()
-    ->setTitle('Produzione per  Pasticcere')
-    ->addData('Units', $chefValues)
-    ->setXAxis($chefLabels);
-
-
-
-    // Controller
-$prodTrend = ProductionDetail::selectRaw('MONTH(production_date) AS m, SUM(quantity) AS produced')
-    ->join('productions','productions.id','production_details.production_id')
-    ->whereIn('production_details.user_id',$visibleUserIds)
-    ->whereYear('productions.production_date',$year)
-    ->groupBy('m')->orderBy('m')->get();
-
-$wasteTrend = ShowcaseRecipe::selectRaw('MONTH(showcase_date) AS m, SUM(waste) AS waste')
-    ->join('showcases','showcases.id','showcase_recipes.showcase_id')
-    ->whereIn('showcase_recipes.user_id',$visibleUserIds)
-    ->whereYear('showcases.showcase_date',$year)
-    ->groupBy('m')->orderBy('m')->get();
-
-$labels = $prodTrend->pluck('m')->map(fn($m)=>Carbon::create(null,$m,1)->format('M'))->toArray();
-$prodVals = $prodTrend->pluck('produced')->toArray();
-$wasteVals= $wasteTrend->pluck('waste')->toArray();
-
-$prodWasteChart = (new LarapexChart)->areaChart()
-    ->setTitle('Produzione vs. Spreco')
-    ->addData('Produced', $prodVals)
-    ->addData('Wasted',  $wasteVals)
-    ->setXAxis($labels);
-
- $costByCategory = Cost::join('cost_categories', 'costs.category_id', '=', 'cost_categories.id')
-        ->whereIn('costs.user_id', $visibleUserIds)
-        ->groupBy('cost_categories.id', 'cost_categories.name')
-        ->select(
-            'cost_categories.name as category',
-            DB::raw('SUM(costs.amount) as total')
-        )
-        ->get();
-
-    $categoryLabels = $costByCategory->pluck('category')->toArray();
-    $categoryValues = $costByCategory->pluck('total')->map(fn($v) => (float) $v)->toArray();
-
-    $costCategoryChart = (new LarapexChart)->donutChart()
-        ->setTitle('Ripartizione dei costi per categoria')
-        ->addData($categoryValues)
-        ->setLabels($categoryLabels);
-
-
-
-
-
-
-
-
-
-        $fullMonthlyData = $monthlyData->map(function($row) {
-    return [
-        // we'll compare these ISO dates in JS
-        'date'  => Carbon::createFromDate(null, $row->month, 1)->format('Y-m-d'),
-        'total' => $row->total,
-    ];
-})->toArray();
-
-
-
-
-
-
-
-
-
-
-
- // 8) Full datasets for JS date‐range filtering
         $fullSoldData = ShowcaseRecipe::with(['recipe','showcase'])
             ->whereIn('user_id', $visibleUserIds)
             ->get()
@@ -291,48 +271,34 @@ $prodWasteChart = (new LarapexChart)->areaChart()
                 'date'        => $r->showcase->showcase_date->format('Y-m-d'),
             ])->toArray();
 
+        $fullCostData = Cost::with('category')
+            ->whereIn('user_id', $visibleUserIds)
+            ->get()
+            ->map(fn($c) => [
+                'date'     => $c->due_date->format('Y-m-d'),
+                'amount'   => (float) $c->amount,
+                'category' => $c->category->name,
+            ])->toArray();
 
+        $fullIncomeData = Income::whereIn('user_id', $visibleUserIds)
+            ->get()
+            ->map(fn($i) => [
+                'date'   => $i->date->format('Y-m-d'),
+                'amount' => (float) $i->amount,
+            ])->toArray();
 
-
-
-// 8-bis) Full datasets for client-side filtering
-$fullCostData = Cost::with('category')
-    ->whereIn('user_id', $visibleUserIds)
-    ->get()
-    ->map(fn($c) => [
-        'date'     => $c->due_date->format('Y-m-d'),
-        'amount'   => (float) $c->amount,
-        'category' => $c->category->name,
-    ])->toArray();
-
-$fullIncomeData = Income::whereIn('user_id', $visibleUserIds)
-    ->get()
-    ->map(fn($i) => [
-        'date'   => $i->date->format('Y-m-d'),
-        'amount' => (float) $i->amount,
-    ])->toArray();
-
-
-
-
-        // 9) Render dashboard
+        // 14) Render
         return view('dashboard', compact(
-            'sales', 'plus', 'realMargin',
-            'chart', 'comparisonChart', 'yearlyCostChart', 'yearlyIncomeChart',
-            'topSold', 'topWasted',
-            'soldPieChart', 'wastedPieChart',            'totalUsers',
-            'totalRecipes',
-            'totalShowcases',
-            'totalSaleThisYear',
-            'totalWasteThisYear',
-            'totalProfitThisYear','year',   'totalSupplied', 'totalReturned', 'returnRateChart',
-            'chefChart', 'prodWasteChart',    'costCategoryChart' ,
-
-
-    'fullCostData',      // ← add this
-    'fullIncomeData'     
-            ,'fullMonthlyData','fullSoldData','fullWastedData',
-            
+            'sales','plus','realMargin',
+            'chart','comparisonChart','yearlyCostChart','yearlyIncomeChart',
+            'topSold','topWasted',
+            'soldPieChart','wastedPieChart','incidenceChart',
+            'totalUsers','totalRecipes','totalShowcases',
+            'totalSaleThisYear','totalWasteThisYear','totalProfitThisYear',
+            'year','totalSupplied','totalReturned','returnRateChart',
+            'chefChart','prodWasteChart','costCategoryChart',
+            'fullMonthlyData','fullSoldData','fullWastedData',
+            'fullCostData','fullIncomeData'
         ));
     }
 }
