@@ -95,21 +95,10 @@
                         <ul class="to-top-list">
                             <li>
                                 <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
-                                    href="view-profile.html">
+                                    href="{{ route('profile') }}">
                                     <iconify-icon icon="solar:user-linear" class="icon text-xl"></iconify-icon> Il mio profilo</a>
                             </li>
-                            <li>
-                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
-                                    href="email.html">
-                                    <iconify-icon icon="tabler:message-check" class="icon text-xl"></iconify-icon>
-                                    Posta in arrivo</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
-                                    href="company.html">
-                                    <iconify-icon icon="icon-park-outline:setting-two"
-                                        class="icon text-xl"></iconify-icon> Impostazioni</a>
-                            </li>
+                 
                             <li>
                                 <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-danger d-flex align-items-center gap-3"
                                     href="javascript:void(0)" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

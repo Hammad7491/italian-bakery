@@ -62,19 +62,17 @@
                                 // 3) ingredient & labor batch costs
                                 $batchIngCost = $r->batch_ing_cost;
                                 $batchLabCost = $r->batch_labor_cost;
+if ($r->sell_mode === 'piece') {
+    $pcs          = ($r->total_pieces > 0) ? $r->total_pieces : 1;
+    $unitIngCost  = $batchIngCost / $pcs;
+    $unitLabCost  = $batchLabCost / $pcs;
+} else {
+    $wLoss        = $r->recipe_weight ?: $r->ingredients->sum(fn($i) => $i->quantity_g);
+    $kg           = $wLoss > 0 ? $wLoss / 1000 : 1;
+    $unitIngCost  = $batchIngCost / $kg;
+    $unitLabCost  = $batchLabCost / $kg;
+}
 
-                                if ($r->sell_mode === 'piece') {
-                                    $pcs          = $r->total_pieces ?: 1;
-                                    $unitIngCost  = $batchIngCost / $pcs;
-                                    $unitLabCost  = $batchLabCost / $pcs;
-                                } else {
-                                    $wLoss        = $r->recipe_weight
-                                                    ? $r->recipe_weight
-                                                    : $r->ingredients->sum(fn($i) => $i->quantity_g);
-                                    $kg           = $wLoss / 1000 ?: 1;
-                                    $unitIngCost  = $batchIngCost / $kg;
-                                    $unitLabCost  = $batchLabCost / $kg;
-                                }
 
                                 // 4) total expense per unit
                                 $unitTotalCost = $r->total_expense;

@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'Cruscotto')
+@section('title', 'Pasticcere Pro | Cruscotto')
 
 @section('content')
 

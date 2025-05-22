@@ -1,7 +1,7 @@
 {{-- resources/views/frontend/costs/dashboard.blade.php --}}
 @extends('frontend.layouts.app')
 
-@section('title', 'Cruscotto Mensile Costi e Ricavi')
+@section('title', 'Mensile Costi e Ricavi')
 
 @section('content')
 @php 

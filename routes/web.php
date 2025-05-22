@@ -39,6 +39,9 @@ Route::post('logout',  [AuthController::class, 'logout'])->name('logout');
 
 // All routes below require authentication
 Route::middleware('auth')->group(function(){
+Route::get('profile', [UserController::class, 'profile'])->name('profile');
+
+
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
          ->name('dashboard');

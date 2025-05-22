@@ -593,7 +593,20 @@
 @endcan
 
 
-
+<li>
+  <a href="{{ route('profile') }}" class="d-flex align-items-center">
+    <!-- New “user profile” SVG icon -->
+    <svg xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 24 24"
+         fill="currentColor"
+         style="width:1.5em; height:1.5em; color:#e2ae76;">
+      <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.33 0-10 1.667-10 5v3h20v-3c0-3.333-6.67-5-10-5z"/>
+    </svg>
+    <span class="ms-2" style="color: #e2ae76; font-size: 1rem; line-height: 1;">
+      Profile
+    </span>
+  </a>
+</li>
 
 
       <li class="sidebar-logout">

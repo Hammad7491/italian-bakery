@@ -9,9 +9,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
-
+ 
 class UserController extends Controller
 {
+    public function profile()
+    {
+        $user = Auth::user()->load('roles');
+
+        return view('frontend.profile', compact('user'));
+    }
     public function index()
     {
         $query = User::with('roles');
@@ -41,33 +47,6 @@ class UserController extends Controller
         return view('frontend.user-management.users.create', compact('roles','user','isEdit'));
     }
     
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role'     => 'required|exists:roles,id',
-        ]);
-    
-        $role = Role::findOrFail($data['role']);
-        $createdBy = $role->name === 'admin'
-                     ? null
-                     : Auth::id();
-    
-        $user = User::create([
-            'name'       => $data['name'],
-            'email'      => $data['email'],
-            'password'   => Hash::make($data['password']),
-            'created_by' => $createdBy,
-        ]);
-    
-        $user->syncRoles($role);
-    
-        return redirect()
-            ->route('users.index')
-            ->with('success', 'Utente creato con successo!');
-    }
 
     public function toggleStatus(User $user)
     {
@@ -103,26 +82,58 @@ class UserController extends Controller
         return view('frontend.user-management.users.create', compact('roles', 'user', 'isEdit'));
     }
 
+public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name'            => 'required|string|max:255',
+            'email'           => 'required|email|unique:users,email',
+            'password'        => 'required|string|min:6',
+            'role'            => 'required|exists:roles,id',
+            'expiry_enabled'  => 'nullable|in:on',
+            'expiry_date'     => 'required_if:expiry_enabled,on|date|after_or_equal:today',
+        ]);
+
+        $user = User::create([
+            'name'         => $data['name'],
+            'email'        => $data['email'],
+            'password'     => Hash::make($data['password']),
+            'created_by'   => Role::findOrFail($data['role'])->name === 'admin' ? null : auth()->id(),
+            'expiry_date'  => $request->has('expiry_enabled')
+                              ? $data['expiry_date']
+                              : null,
+        ]);
+
+        $user->syncRoles(Role::findOrFail($data['role']));
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Utente creato con successo!');
+    }
+
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:6',
-            'role'     => 'required|exists:roles,id',
+            'name'            => 'required|string|max:255',
+            'email'           => 'required|email|unique:users,email,' . $user->id,
+            'password'        => 'nullable|string|min:6',
+            'role'            => 'required|exists:roles,id',
+            'expiry_enabled'  => 'nullable|in:on',
+            'expiry_date'     => 'required_if:expiry_enabled,on|date|after_or_equal:today',
         ]);
 
-        $user->name  = $data['name'];
-        $user->email = $data['email'];
-
+        $user->name       = $data['name'];
+        $user->email      = $data['email'];
         if (!empty($data['password'])) {
             $user->password = Hash::make($data['password']);
         }
 
+        $user->expiry_date = $request->has('expiry_enabled')
+                              ? $data['expiry_date']
+                              : null;
+
         $user->save();
 
-        $role = Role::findOrFail($data['role']);
-        $user->syncRoles($role);
+        $user->syncRoles(Role::findOrFail($data['role']));
 
         return redirect()
             ->route('users.index')

@@ -27,7 +27,7 @@
     <title>@yield('title', 'Admin Dashboard')</title>
 
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}" sizes="16x16">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.ico') }}" sizes="16x16">
     <link rel="stylesheet" href="{{ asset('assets/css/lib/bootstrap.min.css') }}">
 
     <link rel="stylesheet" href="{{ asset('assets/css/lib/dataTables.min.css') }}">

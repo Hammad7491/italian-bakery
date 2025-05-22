@@ -4,13 +4,16 @@
 @section('title','Utenti')
 
 @section('content')
+@php
+    use Carbon\Carbon;
+@endphp
+
 <div class="container py-5 px-md-4">
 
   {{-- Scheda Profilo Utente Loggato --}}
   <div class="row mb-5 justify-content-center">
     <div class="col-md-6">
       <div class="card shadow-lg rounded-3 border-0 overflow-hidden">
-
         <div class="card-body text-center pt-5">
           <h4 class="fw-bold mb-1">{{ auth()->user()->name }}</h4>
           <p class="text-muted mb-3">{{ auth()->user()->email }}</p>
@@ -63,27 +66,61 @@
 
   {{-- Tabella Utenti --}}
   <div class="table-responsive">
-    <table class="table table-hover table-bordered shadow-sm rounded">
+    <table class="table table-hover table-bordered shadow-sm rounded align-middle">
       <thead style="background-color: #e2ae76; color: #041930;">
         <tr class="text-center fw-semibold">
           <th>Nome</th>
           <th>Email</th>
           <th>Ruoli</th>
+          <th>Scadenza</th>
           <th>Stato</th>
           <th class="text-end">Azioni</th>
         </tr>
       </thead>
       <tbody>
         @foreach($users as $u)
+          @php
+            $today  = Carbon::today();
+            $expiry = $u->expiry_date
+                      ? Carbon::parse($u->expiry_date)
+                      : null;
+
+            if (!$expiry) {
+                $label = '—';
+                $badge = 'bg-secondary';
+            } else {
+                if ($expiry->isPast()) {
+                    // scaduto
+                    $diff      = $expiry->diffInDays($today);
+                    $label     = "Scaduto {$diff} gg fa";
+                    $badge     = 'bg-danger blink';
+                } else {
+                    $diff      = $today->diffInDays($expiry);
+                    $label     = "Tra {$diff} gg";
+                    if ($diff <= 7) {
+                        // entro una settimana
+                        $badge = 'bg-warning';
+                    } else {
+                        // oltre una settimana
+                        $badge = 'bg-success';
+                    }
+                }
+            }
+          @endphp
           <tr>
             <td>{{ $u->name }}</td>
             <td>{{ $u->email }}</td>
-            <td>
+            <td class="text-center">
               @forelse($u->roles as $r)
                 <span class="badge bg-secondary">{{ ucfirst($r->name) }}</span>
               @empty
                 <em class="text-muted">—</em>
               @endforelse
+            </td>
+            <td class="text-center">
+              <span class="badge {{ $badge }}">
+                {{ $label }}
+              </span>
             </td>
             <td class="text-center">
               <span class="badge {{ $u->status ? 'bg-success' : 'bg-danger' }}">
@@ -126,7 +163,6 @@
   </div>
 </div>
 
-
 <style>
   .btn-gold {
     border: 1px solid #e2ae76 !important;
@@ -167,7 +203,14 @@
     background-color: red !important;
     color: white !important;
   }
+
+  /* Blinking animation for expired badges */
+  @keyframes blink {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .blink {
+    animation: blink 1s steps(1, end) infinite;
+  }
 </style>
-
-
 @endsection
