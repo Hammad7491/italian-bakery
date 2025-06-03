@@ -11,7 +11,7 @@ class CreateRecipeCategoriesTable extends Migration
         Schema::create('recipe_categories', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('name')->unique();
+            $table->string('name')->nullable();
             $table->string('status')->nullable();
 
             $table->timestamps();

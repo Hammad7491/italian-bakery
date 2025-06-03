@@ -26,6 +26,17 @@ use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\RolesController;
 
+
+
+Route::get('forgot-password', [AuthController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+
+Route::get('reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('reset-password', [AuthController::class, 'reset'])->name('password.update');
+
+
+
+
 // Public landing
 
      Route::get('/',    [AuthController::class, 'showLoginForm'])->name('login');

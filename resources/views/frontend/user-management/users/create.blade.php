@@ -27,105 +27,143 @@
 
   <div class="card shadow-sm">
     <div class="card-body">
-      <form action="{{ $isEdit
-                        ? route('users.update', $user)
-                        : route('users.store') }}"
-            method="POST">
-        @csrf
-        @if($isEdit) @method('PUT') @endif
+  <form
+    action="{{ $isEdit ? route('users.update', $user) : route('users.store') }}"
+    method="POST">
+    @csrf
+    @if ($isEdit)
+        @method('PUT')
+    @endif
 
-        {{-- Nome --}}
-        <div class="mb-3">
-          <label class="form-label">Nome</label>
-          <input type="text"
-                 name="name"
-                 class="form-control"
-                 value="{{ old('name', $user->name) }}"
-                 required>
-        </div>
+    {{-- Nome --}}
+    <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <input
+            type="text"
+            name="name"
+            class="form-control"
+            value="{{ old('name', $user->name) }}"
+            required>
+    </div>
 
-        {{-- Email --}}
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input type="email"
-                 name="email"
-                 class="form-control"
-                 value="{{ old('email', $user->email) }}"
-                 required>
-        </div>
+    {{-- Email --}}
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input
+            type="email"
+            name="email"
+            class="form-control"
+            value="{{ old('email', $user->email) }}"
+            required>
+    </div>
 
-        {{-- Password --}}
-        <div class="mb-3">
-          <label class="form-label">
+    {{-- Password --}}
+    <div class="mb-3">
+        <label class="form-label">
             Password
-            @if($isEdit)
-              <small class="text-muted">(lascia vuoto per mantenere quella attuale)</small>
+            @if ($isEdit)
+                <small class="text-muted">(lascia vuoto per mantenere quella attuale)</small>
             @endif
-          </label>
-          <input type="password"
-                 name="password"
-                 class="form-control"
-                 {{ $isEdit ? '' : 'required' }}>
+        </label>
+        <div class="input-group">
+            <input
+                type="password"
+                name="password"
+                id="passwordInput"
+                class="form-control"
+                {{ $isEdit ? '' : 'required' }}>
+            <button
+                type="button"
+                class="btn btn-outline-secondary"
+                id="togglePassword">
+                <i class="bi bi-eye" id="togglePasswordIcon"></i>
+            </button>
         </div>
+    </div>
 
-        {{-- Ruolo --}}
-        <div class="mb-4">
-          <label for="role" class="form-label">Ruolo</label>
-          @if($isEdit && auth()->id() === $user->id)
+    {{-- Ruolo --}}
+    <div class="mb-4">
+        <label for="role" class="form-label">Ruolo</label>
+        @if ($isEdit && auth()->id() === $user->id)
             <div>
-              <span class="badge bg-primary">{{ ucfirst($currentRole) }}</span>
+                <span class="badge bg-primary">{{ ucfirst($currentRole) }}</span>
             </div>
-            <input type="hidden" name="role"
-                   value="{{ optional($user->roles->first())->id }}">
-          @else
-            <select id="role"
-                    name="role"
-                    class="form-select"
-                    required>
-              @foreach($roles as $role)
-                @if($role->name === 'super') @continue @endif
-                <option value="{{ $role->id }}"
-                        {{ ((string)old('role', optional($user->roles->first())->id) === (string)$role->id)
-                            ? 'selected'
-                            : '' }}>
-                  {{ ucfirst($role->name) }}
-                </option>
-              @endforeach
+            <input type="hidden" name="role" value="{{ optional($user->roles->first())->id }}">
+        @else
+            <select id="role" name="role" class="form-select" required>
+                @foreach ($roles as $role)
+                    @if ($role->name === 'super')
+                        @continue
+                    @endif
+                    <option
+                        value="{{ $role->id }}"
+                        {{ (string) old('role', optional($user->roles->first())->id) === (string) $role->id ? 'selected' : '' }}>
+                        {{ ucfirst($role->name) }}
+                    </option>
+                @endforeach
             </select>
-          @endif
+        @endif
+    </div>
+
+    {{-- Expiry date toggle & picker only for super --}}
+    @role('super')
+        <div class="form-check mb-3">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="expiryToggle"
+                name="expiry_enabled"
+                {{ $expiryEnabled === 'on' ? 'checked' : '' }}>
+            <label class="form-check-label" for="expiryToggle">
+                Aggiungi data di scadenza / Next renew
+            </label>
         </div>
 
-        {{-- Expiry date toggle & picker only for super --}}
-        @role('super')
-          <div class="form-check mb-3">
-            <input class="form-check-input"
-                   type="checkbox"
-                   id="expiryToggle"
-                   name="expiry_enabled"
-                   {{ $expiryEnabled === 'on' ? 'checked' : '' }}>
-            <label class="form-check-label" for="expiryToggle">
-              Aggiungi data di scadenza / Next renew
-            </label>
-          </div>
-
-          <div class="mb-3" id="expiryDateWrapper"
-               style="{{ $expiryEnabled === 'on' ? '' : 'display:none' }};">
+        <div
+            class="mb-3"
+            id="expiryDateWrapper"
+            style="{{ $expiryEnabled === 'on' ? '' : 'display:none' }};">
             <label class="form-label">Data di scadenza</label>
-            <input type="date"
-                   name="expiry_date"
-                   id="expiryDate"
-                   class="form-control"
-                   min="{{ $minDate }}"
-                   value="{{ $expiryValue }}">
-          </div>
-        @endrole
+            <input
+                type="date"
+                name="expiry_date"
+                id="expiryDate"
+                class="form-control"
+                min="{{ $minDate }}"
+                value="{{ $expiryValue }}">
+        </div>
+    @endrole
 
-        <button type="submit"
-                class="btn btn-gold-blue px-4 py-2 fw-semibold">
-          <i class="bi bi-check-circle me-1"></i>
-          {{ $isEdit ? 'Aggiorna Utente' : 'Aggiungi Utente' }}
-        </button>
-      </form>
+    <button type="submit" class="btn btn-gold-blue px-4 py-2 fw-semibold">
+        <i class="bi bi-check-circle me-1"></i>
+        {{ $isEdit ? 'Aggiorna Utente' : 'Aggiungi Utente' }}
+    </button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('passwordInput');
+        const icon = document.getElementById('togglePasswordIcon');
+
+        toggleBtn.addEventListener('click', function() {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            icon.classList.toggle('bi-eye');
+            icon.classList.toggle('bi-eye-slash');
+        });
+
+        @role('super')
+        // expiry date show/hide
+        const expiryToggle = document.getElementById('expiryToggle');
+        const expiryWrapper = document.getElementById('expiryDateWrapper');
+        expiryToggle.addEventListener('change', function() {
+            expiryWrapper.style.display = this.checked ? '' : 'none';
+        });
+        @endrole
+    });
+</script>
+
     </div>
   </div>
 </div>

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RecipeCategory;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\RecipeCategory;
 use Illuminate\Validation\Rule;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RecipeCategoryController extends Controller
@@ -13,55 +15,111 @@ class RecipeCategoryController extends Controller
     public function index()
     {
         $user = Auth::user();
-    
+
         // 1) Build the “group” of IDs you should see
         if (is_null($user->created_by)) {
             // You’re a root user: see yourself + anyone you created
             $visibleUserIds = \App\Models\User::where('created_by', $user->id)
-                                   ->pluck('id')
-                                   ->push($user->id)
-                                   ->unique();
+                ->pluck('id')
+                ->push($user->id)
+                ->unique();
         } else {
             // You’re a child: see yourself + your creator
             $visibleUserIds = collect([$user->id, $user->created_by])->unique();
         }
-    
+
         // 2) Fetch categories in your group OR with status = 'Default'
         $categories = RecipeCategory::with('user')
-            ->where(function($q) use ($visibleUserIds) {
+            ->where(function ($q) use ($visibleUserIds) {
                 $q->whereIn('user_id', $visibleUserIds)
-                  ->orWhere('status', 'Default');
+                    ->orWhere('status', 'Default');
             })
             ->orderBy('name')
             ->get();
-    
+
         return view('frontend.recipe_categories.index', compact('categories'));
     }
 
     /**
      * Store a new category for this user.
      */
-    public function store(Request $request)
-    {
-        $userId = Auth::id();
 
-        $data = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                // unique per user
-                Rule::unique('recipe_categories')
-                    ->where(fn($q) => $q->where('user_id', $userId)),
-            ],
-        ]);
 
-        $data['user_id'] = $userId;
+public function store(Request $request)
+{
+    $user = Auth::user();
 
-        RecipeCategory::create($data);
-
-        return back()->with('success', 'Categoria aggiunta con successo!');
+    if (is_null($user->created_by)) {
+        $visibleUserIds = User::where('created_by', $user->id)
+            ->pluck('id')
+            ->push($user->id)
+            ->unique();
+    } else {
+        $visibleUserIds = collect([$user->id, $user->created_by])->unique();
     }
+
+    $data = $request->validate([
+        'name' => [
+            'required',
+            'string',
+            'max:255',
+            Rule::unique('recipe_categories')
+                ->where(function ($query) use ($visibleUserIds, $request) {
+                    return $query->whereIn('user_id', $visibleUserIds)
+                                 ->where('name', $request->name);
+                }),
+        ],
+    ]);
+
+    $data['user_id'] = $user->id;
+
+    RecipeCategory::create($data);
+
+    return back()->with('success', 'Categoria aggiunta con successo!');
+}
+
+public function update(Request $request, RecipeCategory $recipeCategory)
+{
+    $user = Auth::user();
+
+    // guard: only own records
+    if ($recipeCategory->user_id !== $user->id) {
+        abort(Response::HTTP_FORBIDDEN, 'Operazione non autorizzata');
+    }
+
+    if (is_null($user->created_by)) {
+        $visibleUserIds = User::where('created_by', $user->id)
+            ->pluck('id')
+            ->push($user->id)
+            ->unique();
+    } else {
+        $visibleUserIds = collect([$user->id, $user->created_by])->unique();
+    }
+
+    $data = $request->validate([
+        'name' => [
+            'required',
+            'string',
+            'max:255',
+            Rule::unique('recipe_categories')
+                ->where(function ($query) use ($visibleUserIds, $request, $recipeCategory) {
+                    return $query->whereIn('user_id', $visibleUserIds)
+                                 ->where('name', $request->name);
+                })
+                ->ignore($recipeCategory->id),
+        ],
+    ]);
+
+    $recipeCategory->update([
+        'name' => $data['name'],
+        // user_id unchanged
+    ]);
+
+    return redirect()
+        ->route('recipe-categories.index')
+        ->with('success', 'Categoria aggiornata con successo!');
+}
+
 
     /**
      * Show the edit form (same view, but with $category pre-filled).
@@ -89,36 +147,6 @@ class RecipeCategoryController extends Controller
     /**
      * Update an existing category, scoped to the user.
      */
-    public function update(Request $request, RecipeCategory $recipeCategory)
-    {
-        $userId = Auth::id();
-
-        // guard: only own records
-        if ($recipeCategory->user_id !== $userId) {
-            abort(Response::HTTP_FORBIDDEN, 'Operazione non autorizzata');
-        }
-
-        $data = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                // unique per user, ignoring this record
-                Rule::unique('recipe_categories')
-                    ->ignore($recipeCategory->id)
-                    ->where(fn($q) => $q->where('user_id', $userId)),
-            ],
-        ]);
-
-        $recipeCategory->update([
-            'name' => $data['name'],
-            // we leave user_id unchanged
-        ]);
-
-        return redirect()
-            ->route('recipe-categories.index')
-            ->with('success', 'Categoria aggiornata con successo!');
-    }
 
     /**
      * Display a single category.

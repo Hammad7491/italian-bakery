@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+    use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
 /**
  * @mixin \Spatie\Permission\Traits\HasRoles
@@ -37,6 +38,21 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'status'            => 'boolean',
     ];
+
+
+
+
+
+public function sendPasswordResetNotification($token)
+{
+    $url = url(route('password.reset', [
+        'token' => $token,
+        'email' => $this->email,
+    ], false));
+
+    $this->notify(new \App\Notifications\CustomResetPasswordNotification($url));
+}
+
 
     public function creator()
 {

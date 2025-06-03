@@ -18,19 +18,19 @@ class UserController extends Controller
 
         return view('frontend.profile', compact('user'));
     }
-    public function index()
-    {
-        $query = User::with('roles');
+public function index()
+{
+    $query = User::with('roles');
 
-        if (! Auth::user()->hasRole('super')) {
-            $query->where('created_by', Auth::id());
-        }
-
-        $users = $query->paginate(10);
-
-        return view('frontend.user-management.users.index', compact('users'));
+    if (!Auth::user()->hasRole('super')) {
+        $query->where('created_by', Auth::id());
     }
 
+    // Removed paginate(), now fetch all records
+    $users = $query->get();
+
+    return view('frontend.user-management.users.index', compact('users'));
+}
     public function create()
     {
         $currentUser = Auth::user();
