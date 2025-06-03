@@ -138,7 +138,7 @@
                 </span>
                 <div>
                   <span class="mb-2 fw-medium text-secondary-light text-sm">Vendite ({{ $year }})</span>
-                  <h6 class="fw-semibold">${{ number_format($totalSaleThisYear, 2) }}</h6>
+                  <h6 class="fw-semibold">€{{ number_format($totalSaleThisYear, 2) }}</h6>
                 </div>
               </div>
               <div id="total-sales-chart"></div>
@@ -184,7 +184,7 @@
                 </span>
                 <div>
                   <span class="mb-2 fw-medium text-secondary-light text-sm">Profitto ({{ $year }})</span>
-                  <h6 class="fw-semibold">${{ number_format($totalProfitThisYear, 2) }}</h6>
+                  <h6 class="fw-semibold">€{{ number_format($totalProfitThisYear, 2) }}</h6>
                 </div>
               </div>
               <div id="total-profit-chart"></div>
@@ -257,7 +257,7 @@
                         </span>
                         <div>
                             <span class="text-secondary-light text-sm fw-medium">Vendite</span>
-                            <h6 class="text-md fw-semibold mb-0">${{ number_format($sales, 2) }}</h6>
+                            <h6 class="text-md fw-semibold mb-0">€{{ number_format($sales, 2) }}</h6>
                         </div>
                     </div>
 
@@ -269,7 +269,7 @@
                         </span>
                         <div>
                             <span class="text-secondary-light text-sm fw-medium">Margine Lordo</span>
-                            <h6 class="text-md fw-semibold mb-0">${{ number_format($plus, 2) }}</h6>
+                            <h6 class="text-md fw-semibold mb-0">€{{ number_format($plus, 2) }}</h6>
                         </div>
                     </div>
 
@@ -281,7 +281,7 @@
                         </span>
                         <div>
                             <span class="text-secondary-light text-sm fw-medium">Profitto Netto</span>
-                            <h6 class="text-md fw-semibold mb-0">${{ number_format($realMargin, 2) }}</h6>
+                            <h6 class="text-md fw-semibold mb-0">€{{ number_format($realMargin, 2) }}</h6>
                         </div>
                     </div>
                 </div>

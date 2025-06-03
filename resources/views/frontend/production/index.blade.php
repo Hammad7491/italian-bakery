@@ -142,7 +142,7 @@
     @php
         use Illuminate\Support\Str;
         $allRecipes = $productions->flatMap(fn($p) => $p->details->pluck('recipe.recipe_name'))->unique()->sort();
-        $allChefs = $productions->flatMap(fn($p) => $p->details->pluck('chef.name'))->unique()->sort();
+        $allChefs   = $productions->flatMap(fn($p) => $p->details->pluck('chef.name'))->unique()->sort();
     @endphp
 
     <div class="container py-5">
@@ -230,6 +230,7 @@
             </div>
         </div>
 
+        {{-- Production Table --}}
         <div class="card production-table shadow-sm">
             <div class="card-body p-0">
                 <table class="table mb-0" id="productionTable">
@@ -252,12 +253,15 @@
                                     ->filter()
                                     ->implode(', ');
                                 $rowRecipes = strtolower($p->details->pluck('recipe.recipe_name')->join(' '));
-                                $rowChefs = strtolower($p->details->pluck('chef.name')->join(' '));
+                                $rowChefs   = strtolower($p->details->pluck('chef.name')->join(' '));
                             @endphp
 
-                            {{-- main row --}}
-                            <tr class="prod-row" data-recipes="{{ $rowRecipes }}" data-chefs="{{ $rowChefs }}"
-                                data-equipment="{{ strtolower($equipNames) }}" data-date="{{ $p->production_date }}">
+                            {{-- Main Row --}}
+                            <tr class="prod-row"
+                                data-recipes="{{ $rowRecipes }}"
+                                data-chefs="{{ $rowChefs }}"
+                                data-equipment="{{ strtolower($equipNames) }}"
+                                data-date="{{ $p->production_date }}">
                                 <td>
                                     <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
                                         data-bs-target="#detail-{{ $p->id }}" aria-expanded="false"
@@ -271,10 +275,12 @@
                                     €{{ number_format($p->total_potential_revenue, 2) }}
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('production.show', $p) }}" class="btn btn-sm btn-deepblue me-1"><i
-                                            class="bi bi-eye"></i></a>
-                                    <a href="{{ route('production.edit', $p) }}" class="btn btn-sm btn-gold me-1"><i
-                                            class="bi bi-pencil"></i></a>
+                                    <a href="{{ route('production.show', $p) }}" class="btn btn-sm btn-deepblue me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('production.edit', $p) }}" class="btn btn-sm btn-gold me-1">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
                                     <form action="{{ route('production.destroy', $p) }}" method="POST" class="d-inline"
                                         onsubmit="return confirm('Eliminare?');">
                                         @csrf @method('DELETE')
@@ -283,19 +289,20 @@
                                 </td>
                             </tr>
 
-                            {{-- detail row, hidden by default --}}
+                            {{-- Detail Row --}}
                             <tr id="detail-{{ $p->id }}" class="detail-row collapse">
                                 <td colspan="5" class="p-3">
                                     <ul class="mb-0 ps-3">
                                         @foreach ($p->details as $d)
                                             @php
-                                                $ids = array_filter(explode(',', $d->equipment_ids));
+                                                $ids   = array_filter(explode(',', $d->equipment_ids));
                                                 $names = collect($ids)
                                                     ->map(fn($id) => $equipmentMap[$id] ?? '')
                                                     ->filter()
                                                     ->implode(', ');
                                             @endphp
                                             <li data-recipe="{{ strtolower($d->recipe->recipe_name) }}"
+                                                data-chef="{{ strtolower($d->chef->name) }}"
                                                 data-potential="{{ $d->potential_revenue }}">
                                                 <strong>{{ $d->recipe->recipe_name }}</strong> × {{ $d->quantity }}
                                                 — Chef: {{ $d->chef->name }}, <i class="bi bi-tools"></i>
@@ -310,25 +317,22 @@
                 </table>
             </div>
         </div>
-
     </div>
 @endsection
-
 
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const recipeCBs      = Array.from(document.querySelectorAll('.recipe-checkbox'));
-    const chefCBs        = Array.from(document.querySelectorAll('.chef-checkbox'));
-    const equipmentCBs   = Array.from(document.querySelectorAll('.equipment-checkbox'));
-    const rows           = Array.from(document.querySelectorAll('.prod-row'));
-    const detailRows     = Array.from(document.querySelectorAll('.detail-row'));
-    const totalRevElem   = document.getElementById('totalRevenue');
-    const activeTags     = document.getElementById('activeFilters');
-    const startInput     = document.getElementById('filterStartDate');
-    const endInput       = document.getElementById('filterEndDate');
+    const recipeCBs    = Array.from(document.querySelectorAll('.recipe-checkbox'));
+    const chefCBs      = Array.from(document.querySelectorAll('.chef-checkbox'));
+    const rows         = Array.from(document.querySelectorAll('.prod-row'));
+    const detailRows   = Array.from(document.querySelectorAll('.detail-row'));
+    const totalRevElem = document.getElementById('totalRevenue');
+    const activeTags   = document.getElementById('activeFilters');
+    const startInput   = document.getElementById('filterStartDate');
+    const endInput     = document.getElementById('filterEndDate');
 
-    // Toggle detail-row carets
+    // Toggle caret icons
     document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(btn => {
         btn.addEventListener('click', () => {
             const icon = btn.querySelector('i');
@@ -337,96 +341,73 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Build the little chips under the filters
-    function updateActiveFilters(selRecipes, selChefs, selEquipments) {
+    function updateActiveFilters(recipes, chefs) {
         activeTags.innerHTML = '';
 
-        selRecipes.forEach(r => {
+        recipes.forEach(r => {
             const span = document.createElement('span');
             span.className = 'filter-chip';
             span.innerHTML = `${r} <span class="remove-filter" data-type="recipe" data-value="${r}">&times;</span>`;
             activeTags.appendChild(span);
         });
-        selChefs.forEach(c => {
+
+        chefs.forEach(c => {
             const span = document.createElement('span');
             span.className = 'filter-chip';
             span.innerHTML = `${c} <span class="remove-filter" data-type="chef" data-value="${c}">&times;</span>`;
             activeTags.appendChild(span);
         });
-        selEquipments.forEach(e => {
-            const span = document.createElement('span');
-            span.className = 'filter-chip';
-            span.innerHTML = `${e} <span class="remove-filter" data-type="equipment" data-value="${e}">&times;</span>`;
-            activeTags.appendChild(span);
-        });
 
-        // remove-chip click handlers
         document.querySelectorAll('.remove-filter').forEach(el => {
             el.addEventListener('click', () => {
                 const { type, value } = el.dataset;
-                let group = type === 'recipe' ? recipeCBs
-                          : type === 'chef'   ? chefCBs
-                                              : equipmentCBs;
-                group.forEach(cb => {
-                    if (cb.value === value) cb.checked = false;
-                });
+                const group = type === 'recipe' ? recipeCBs : chefCBs;
+                group.forEach(cb => { if (cb.value === value) cb.checked = false; });
                 filterTable();
             });
         });
     }
 
-    // Main filter function
     function filterTable() {
-        const selRecipes    = recipeCBs.filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
-        const selChefs      = chefCBs.filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
-        const selEquipments = equipmentCBs.filter(cb => cb.checked).map(cb => cb.value.toLowerCase());
+        const selRecipes = recipeCBs.filter(cb => cb.checked).map(cb => cb.value);
+        const selChefs   = chefCBs.filter(cb => cb.checked).map(cb => cb.value);
 
-        updateActiveFilters(selRecipes, selChefs, selEquipments);
+        updateActiveFilters(selRecipes, selChefs);
 
-        // parse date inputs
         const startDate = startInput.value ? new Date(startInput.value) : null;
         const endDate   = endInput.value   ? new Date(endInput.value)   : null;
 
         let grandTotal = 0;
 
         rows.forEach((row, i) => {
-            const recs      = row.dataset.recipes;
-            const chefs     = row.dataset.chefs;
-            const equipment = row.dataset.equipment;
-            const rowDate   = new Date(row.dataset.date);
+            const recs    = row.dataset.recipes;
+            const chefs   = row.dataset.chefs;
+            const rowDate = new Date(row.dataset.date);
 
-            // apply recipe/chef/equipment filters
-            const recipeMatch = !selRecipes.length    || selRecipes.some(r => recs.includes(r));
-            const chefMatch   = !selChefs.length      || selChefs.some(c => chefs.includes(c));
-            const equipMatch  = !selEquipments.length || selEquipments.some(e => equipment.includes(e));
-
-            // apply date range
-            let dateMatch = true;
+            const recipeMatch = !selRecipes.length || selRecipes.some(r => recs.includes(r));
+            const chefMatch   = !selChefs.length   || selChefs.some(c => chefs.includes(c));
+            let dateMatch    = true;
             if (startDate && rowDate < startDate) dateMatch = false;
             if (endDate   && rowDate > endDate)   dateMatch = false;
 
-            const showRow = recipeMatch && chefMatch && equipMatch && dateMatch;
+            const showRow = recipeMatch && chefMatch && dateMatch;
 
-            // show/hide main + detail row
-            row.style.display         = showRow ? '' : 'none';
+            row.style.display          = showRow ? '' : 'none';
             detailRows[i].style.display = showRow ? '' : 'none';
 
             if (!showRow) return;
 
-            // recalculate row total based on detail-row visibility
+            // Recalculate potentials
             let rowSum = 0;
             detailRows[i].querySelectorAll('li').forEach(li => {
                 const recipe    = li.dataset.recipe;
+                const chef      = li.dataset.chef;
                 const potential = parseFloat(li.dataset.potential) || 0;
-                const chefMatchDetail = selChefs.length
-                    ? li.textContent.toLowerCase().match(/chef:\s*([^,]+)/i)?.[1]?.trim()
-                    : true;
-                const equipMatchDetail = true; // keep existing logic
 
-                const recMatchDetail = !selRecipes.length || selRecipes.includes(recipe);
+                const recOk  = !selRecipes.length || selRecipes.includes(recipe);
+                const chefOk = !selChefs.length   || selChefs.includes(chef);
 
-                const showDetail = recMatchDetail && chefMatchDetail && equipMatchDetail;
-                if (showDetail) {
+                if (recOk && chefOk) {
                     li.style.display = '';
                     rowSum += potential;
                 } else {
@@ -434,27 +415,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // update row total
-            const cell = row.querySelector('.row-potential');
-            cell.textContent = `€${rowSum.toFixed(2)}`;
+            row.querySelector('.row-potential').textContent = `€${rowSum.toFixed(2)}`;
             grandTotal += rowSum;
         });
 
         totalRevElem.textContent = `€${grandTotal.toFixed(2)}`;
     }
 
-    // wire up all change events
-    [...recipeCBs, ...chefCBs, ...equipmentCBs].forEach(cb => {
-        cb.setAttribute('data-type', 
-           cb.classList.contains('recipe-checkbox') ? 'recipe' :
-           cb.classList.contains('chef-checkbox')   ? 'chef'   :
-                                                      'equipment');
+    // Wire up events
+    [...recipeCBs, ...chefCBs].forEach(cb => {
         cb.addEventListener('change', filterTable);
     });
     startInput.addEventListener('change', filterTable);
     endInput.addEventListener('change', filterTable);
 
-    // initial run
     filterTable();
 });
 </script>

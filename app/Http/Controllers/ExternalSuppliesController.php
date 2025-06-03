@@ -143,6 +143,20 @@ class ExternalSuppliesController extends Controller
 
     public function store(Request $request)
     {
+        $messages = [
+            'supply_name.required_if'     => 'Il nome della fornitura è obbligatorio quando si salva come modello.',
+            'client_id.required'          => 'Devi selezionare un cliente.',
+            'client_id.exists'            => 'Il cliente selezionato non esiste.',
+            'supply_date.required'        => 'La data della fornitura è obbligatoria.',
+            'supply_date.date'            => 'Inserisci una data valida.',
+            'recipes.required'            => 'Devi aggiungere almeno una ricetta.',
+            'recipes.*.id.required'       => 'Seleziona una ricetta per ogni riga.',
+            'recipes.*.id.exists'         => 'La ricetta selezionata non esiste.',
+            'recipes.*.price.required'    => 'Il prezzo è obbligatorio e deve essere un numero.',
+            'recipes.*.qty.required'      => 'La quantità è obbligatoria e deve essere un numero intero.',
+            'recipes.*.total_amount.required' => 'L\'importo totale è obbligatorio e deve essere un numero.',
+        ];
+
         $data = $request->validate([
             'supply_name'            => 'required_if:template_action,template,both|max:255',
             'template_action'        => 'nullable|in:none,template,both',
@@ -153,7 +167,7 @@ class ExternalSuppliesController extends Controller
             'recipes.*.price'        => 'required|numeric|min:0',
             'recipes.*.qty'          => 'required|integer|min:0',
             'recipes.*.total_amount' => 'required|numeric|min:0',
-        ]);
+        ], $messages);
 
         $saveTemplate = in_array($data['template_action'], ['template','both']);
         $totalAmount  = array_sum(array_column($data['recipes'], 'total_amount'));
@@ -240,6 +254,20 @@ class ExternalSuppliesController extends Controller
 
     public function update(Request $request, ExternalSupply $externalSupply)
     {
+        $messages = [
+            'supply_name.required_if'     => 'Il nome della fornitura è obbligatorio quando si salva come modello.',
+            'client_id.required'          => 'Devi selezionare un cliente.',
+            'client_id.exists'            => 'Il cliente selezionato non esiste.',
+            'supply_date.required'        => 'La data della fornitura è obbligatoria.',
+            'supply_date.date'            => 'Inserisci una data valida.',
+            'recipes.required'            => 'Devi aggiungere almeno una ricetta.',
+            'recipes.*.id.required'       => 'Seleziona una ricetta per ogni riga.',
+            'recipes.*.id.exists'         => 'La ricetta selezionata non esiste.',
+            'recipes.*.price.required'    => 'Il prezzo è obbligatorio e deve essere un numero.',
+            'recipes.*.qty.required'      => 'La quantità è obbligatoria e deve essere un numero intero.',
+            'recipes.*.total_amount.required' => 'L\'importo totale è obbligatorio e deve essere un numero.',
+        ];
+
         $data = $request->validate([
             'supply_name'            => 'required_if:template_action,template,both|max:255',
             'template_action'        => 'nullable|in:none,template,both',
@@ -250,7 +278,7 @@ class ExternalSuppliesController extends Controller
             'recipes.*.price'        => 'required|numeric|min:0',
             'recipes.*.qty'          => 'required|integer|min:0',
             'recipes.*.total_amount' => 'required|numeric|min:0',
-        ]);
+        ], $messages);
 
         $saveTemplate = in_array($data['template_action'], ['template','both']);
         $totalAmount  = array_sum(array_column($data['recipes'], 'total_amount'));

@@ -1,4 +1,4 @@
-<!-- meta tags and other links -->
+<!-- meta tag e altri link -->
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -53,8 +53,8 @@
                 <a href="{{ url('/') }}" class="mb-40 max-w-290-px">
                     <img src="{{ asset('assets/images/asset/logo.jpg') }}" alt="">
                 </a>
-                <h4 class="mb-12">Login To Pasticcere Pro</h4>
-                <p class="mb-32 text-secondary-light text-lg">Welcome back! please enter your detail</p>
+                <h4 class="mb-12">Accedi a Pasticcere Pro</h4>
+                <p class="mb-32 text-secondary-light text-lg">Bentornato! Inserisci i tuoi dati</p>
             </div>
 
             @if(session('error'))

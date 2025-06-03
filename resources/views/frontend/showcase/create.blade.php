@@ -75,10 +75,7 @@
                                     @selected(old('template_action', $isEdit ? $showcase->template_action : '')==='template')>
                                     Salva come Modello
                                 </option>
-                                <option value="both"
-                                    @selected(old('template_action', $isEdit ? $showcase->template_action : '')==='both')>
-                                    Salva e Modello
-                                </option>
+                               
                             </select>
                         </div>
                     </div>
@@ -295,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let rowIndex = tbody.querySelectorAll('.showcase-row').length;
     const baseRow = tbody.querySelector('.showcase-row').cloneNode(true);
 
-    // Toggle etichetta in base al tipo di salvataggio
+    // Cambia etichetta in base al tipo di salvataggio
     function toggleNameRequirement() {
         const isTemplate = ['template', 'both'].includes(actionSelect.value);
         showcaseNameLabel.textContent = isTemplate ? 'Nome Modello' : 'Nome Vetrina';
@@ -344,44 +341,47 @@ document.addEventListener('DOMContentLoaded', function () {
         const weight   = parseFloat(opt?.dataset.recipeWeight || 0);
         const grams    = parseFloat(opt?.dataset.ingredientsGrams || 0);
         const totalPcs = parseFloat(opt?.dataset.totalPieces || 1);
-        const unitCost = mode === 'piece' ? (batch / totalPcs) : (batch / ((weight || grams) / 1000));
+        const unitCost = mode === 'piece'
+            ? (batch / totalPcs)
+            : (batch / ((weight || grams) / 1000));
 
-        row.querySelector('.price-field').value = price.toFixed(2);
-        row.querySelector('.unit-field').textContent = mode === 'kg' ? '€/kg' : '€/pz';
-        row.querySelector('.unit-ing-field').value = unitCost.toFixed(2);
-        row.querySelector('.potential-field').value = (price * qty).toFixed(2);
-        row.querySelector('.revenue-field').value = (price * sold).toFixed(2);
+        row.querySelector('.price-field').value       = price.toFixed(2);
+        row.querySelector('.unit-field').textContent  = mode === 'kg' ? '€/kg' : '€/pz';
+        row.querySelector('.unit-ing-field').value    = unitCost.toFixed(2);
+        row.querySelector('.potential-field').value   = (price * qty).toFixed(2);
+        row.querySelector('.revenue-field').value     = (price * sold).toFixed(2);
 
         recalcSummary();
     }
 
-    // Ricalcola totali
+    // Ricalcola tutti i totali
     function recalcSummary() {
         let pot = 0, rev = 0, ingSold = 0, ingWaste = 0;
         const bep = parseFloat(breakEvenInput.value) || 0;
 
         tbody.querySelectorAll('.showcase-row').forEach(r => {
-            const price = parseFloat(r.querySelector('.price-field').value || 0);
-            const qty = parseFloat(r.querySelector('.qty-field').value || 0);
-            const sold = parseFloat(r.querySelector('.sold-field').value || 0);
-            const waste = parseFloat(r.querySelector('.waste-field').value || 0);
+            const price    = parseFloat(r.querySelector('.price-field').value || 0);
+            const qty      = parseFloat(r.querySelector('.qty-field').value || 0);
+            const sold     = parseFloat(r.querySelector('.sold-field').value || 0);
+            const waste    = parseFloat(r.querySelector('.waste-field').value || 0);
             const unitCost = parseFloat(r.querySelector('.unit-ing-field').value || 0);
-            pot += price * qty;
-            rev += price * sold;
-            ingSold += unitCost * sold;
+
+            pot      += price * qty;
+            rev      += price * sold;
+            ingSold  += unitCost * sold;
             ingWaste += unitCost * waste;
         });
 
-        const plus = rev - bep;
-        const pct = rev > 0 ? ((ingSold + ingWaste) / rev) * 100 : 0;
+        const plus      = rev - bep;
+        const pct       = rev > 0 ? ((ingSold + ingWaste) / rev) * 100 : 0;
         const rawMargin = plus - (plus * pct / 100);
-        const finalMargin = plus < 0 ? 0 : rawMargin;
+        const finalMrg  = plus < 0 ? 0 : rawMargin;
 
         totalPotential.value = pot.toFixed(2);
-        totalRevenue.value = rev.toFixed(2);
-        plusAmount.value = plus.toFixed(2);
+        totalRevenue.value   = rev.toFixed(2);
+        plusAmount.value     = plus.toFixed(2);
         plusAmount.style.color = plus < 0 ? 'red' : 'green';
-        realMargin.value = finalMargin.toFixed(2);
+        realMargin.value     = finalMrg.toFixed(2);
     }
 
     // Aggiungi nuova riga
@@ -399,12 +399,13 @@ document.addEventListener('DOMContentLoaded', function () {
     templateSelect?.addEventListener('change', function () {
         const id = this.value;
         if (!id) return;
+
         fetch(`/showcase/getTemplate/${id}`)
             .then(r => r.json())
             .then(data => {
                 showcaseNameInput.value = data.showcase_name;
                 showcaseDateInput.value = data.showcase_date;
-                actionSelect.value = data.template_action;
+                actionSelect.value      = data.template_action;
                 toggleNameRequirement();
 
                 tbody.innerHTML = '';
@@ -416,10 +417,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         el.name = el.name.replace(/\[\d+\]/, `[${rowIndex}]`);
                     });
                     r.querySelector('.recipe-select').value = detail.recipe_id;
-                    r.querySelector('.qty-field').value = detail.quantity;
-                    r.querySelector('.sold-field').value = detail.sold;
-                    r.querySelector('.reuse-field').value = detail.reuse;
-                    r.querySelector('.waste-field').value = detail.waste;
+                    r.querySelector('.qty-field').value      = detail.quantity;
+                    r.querySelector('.sold-field').value     = detail.sold;
+                    r.querySelector('.reuse-field').value    = detail.reuse;
+                    r.querySelector('.waste-field').value    = detail.waste;
                     tbody.appendChild(r);
                     wireRowEvents(r);
                     rowIndex++;
@@ -428,13 +429,14 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(console.error);
     });
 
-    // Bind iniziale per righe pre-renderizzate
+    // Bind iniziale per le righe già presenti
     tbody.querySelectorAll('.showcase-row').forEach(r => {
         wireRowEvents(r);
     });
 });
 </script>
 @endsection
+
 
 
 

@@ -136,9 +136,28 @@ class ShowcaseController extends Controller
     //     ));
     // }
 
-   public function store(Request $request)
+public function store(Request $request)
 {
-    // 1) Basic validation
+    // messaggi di validazione personalizzati
+    $messages = [
+        'showcase_name.required'              => 'Il nome della vetrina è obbligatorio.',
+        'showcase_date.required'              => 'La data della vetrina è obbligatoria.',
+        'template_action.required'            => 'Seleziona un\'azione valida per il salvataggio.',
+        'items.required'                      => 'Devi aggiungere almeno un articolo alla vetrina.',
+        'items.*.recipe_id.required'          => 'Seleziona una ricetta per ciascuna riga.',
+        'items.*.price.required'              => 'Il prezzo è obbligatorio e deve essere un numero.',
+        'items.*.quantity.required'           => 'La quantità è obbligatoria e deve essere un numero intero.',
+        'items.*.sold.required'               => 'Il numero di venduti è obbligatorio e deve essere un numero intero.',
+        'items.*.reuse.required'              => 'Il numero di riutilizzi è obbligatorio e deve essere un numero intero.',
+        'items.*.waste.required'              => 'Il numero di scarti è obbligatorio e deve essere un numero intero.',
+        'items.*.potential_income.required'   => 'Il potenziale è obbligatorio e deve essere un numero.',
+        'items.*.actual_revenue.required'     => 'Il ricavo effettivo è obbligatorio e deve essere un numero.',
+        'total_revenue.required'              => 'Il ricavo totale è obbligatorio e deve essere un numero.',
+        'plus.required'                       => 'Il valore "Extra" è obbligatorio e deve essere un numero.',
+        'real_margin.required'                => 'Il margine reale è obbligatorio e deve essere un numero.',
+    ];
+
+    // 1) validazione base
     $request->validate([
         'showcase_name'   => 'nullable|string|max:255',
         'showcase_date'   => 'required|date',
@@ -156,13 +175,13 @@ class ShowcaseController extends Controller
         'total_revenue'            => 'required|numeric|min:0',
         'plus'                     => 'required|numeric',
         'real_margin'              => 'required|numeric',
-    ]);
+    ], $messages);
 
-    // if saving as a template, name becomes required
+    // se salvo come modello, il nome diventa obbligatorio
     if (in_array($request->template_action, ['template','both'])) {
         $request->validate([
             'showcase_name' => 'required|string|max:255',
-        ]);
+        ], $messages);
     }
 
     $data       = $request->all();
@@ -170,26 +189,26 @@ class ShowcaseController extends Controller
     $action     = $data['template_action'];
     $templateId = $data['template_id'] ?? null;
 
-    // helper to sync the recipe lines
+    // helper per sincronizzare le righe
     $syncLines = function(Showcase $sc) use($data, $userId){
         $sc->recipes()->delete();
         foreach($data['items'] as $row){
             ShowcaseRecipe::create([
-                'showcase_id'     => $sc->id,
-                'recipe_id'       => $row['recipe_id'],
-                'price'           => $row['price'],
-                'quantity'        => $row['quantity'],
-                'sold'            => $row['sold'],
-                'reuse'           => $row['reuse'],
-                'waste'           => $row['waste'],
-                'potential_income'=> $row['potential_income'],
-                'actual_revenue'  => $row['actual_revenue'],
-                'user_id'         => $userId,
+                'showcase_id'      => $sc->id,
+                'recipe_id'        => $row['recipe_id'],
+                'price'            => $row['price'],
+                'quantity'         => $row['quantity'],
+                'sold'             => $row['sold'],
+                'reuse'            => $row['reuse'],
+                'waste'            => $row['waste'],
+                'potential_income' => $row['potential_income'],
+                'actual_revenue'   => $row['actual_revenue'],
+                'user_id'          => $userId,
             ]);
         }
     };
 
-    // ── Case A: Save as Template → create new template record
+    // ── Caso A: Salva come Modello → crea nuovo record template
     if ($action === 'template') {
         $newTemplate = Showcase::create([
             'showcase_name'   => $data['showcase_name'],
@@ -209,7 +228,7 @@ class ShowcaseController extends Controller
             ->with('success','Nuovo modello creato con successo.');
     }
 
-    // ── Case B: Save & Template → update template + create new showcase
+    // ── Caso B: Salva e Modello → aggiorna template + crea nuova vetrina
     if ($action === 'both' && $templateId) {
         $tpl = Showcase::findOrFail($templateId);
         $tpl->update([
@@ -224,10 +243,10 @@ class ShowcaseController extends Controller
             'user_id'         => $userId,
         ]);
         $syncLines($tpl);
-        // fall through to create a new showcase
+        // prosegue per creare nuova vetrina
     }
 
-    // ── Case C: Just Save or Save & Template fallthrough
+    // ── Caso C: Solo Salva o Salva & Modello
     $new = Showcase::create([
         'showcase_name'   => $data['showcase_name'],
         'showcase_date'   => $data['showcase_date'],
@@ -247,80 +266,98 @@ class ShowcaseController extends Controller
 }
 
 
-    public function update(Request $request, Showcase $showcase)
-    {
-        // only the owner can edit
-        abort_if($showcase->user_id !== Auth::id(), 403);
 
-        // same validation rules as store()
+
+   public function update(Request $request, Showcase $showcase)
+{
+    // solo il proprietario può modificare
+    abort_if($showcase->user_id !== Auth::id(), 403);
+
+    // messaggi di validazione personalizzati
+    $messages = [
+        'showcase_date.required'           => 'La data della vetrina è obbligatoria.',
+        'items.required'                   => 'Devi aggiungere almeno un articolo alla vetrina.',
+        'items.*.recipe_id.required'       => 'Seleziona una ricetta per ciascuna riga.',
+        'items.*.price.required'           => 'Il prezzo è obbligatorio e deve essere un numero.',
+        'items.*.quantity.required'        => 'La quantità è obbligatoria e deve essere un numero intero.',
+        'items.*.sold.required'            => 'Il numero dei venduti è obbligatorio e deve essere un numero intero.',
+        'items.*.reuse.required'           => 'Il numero di riutilizzi è obbligatorio e deve essere un numero intero.',
+        'items.*.waste.required'           => 'Il numero di scarti è obbligatorio e deve essere un numero intero.',
+        'items.*.potential_income.required'=> 'Il potenziale è obbligatorio e deve essere un numero.',
+        'items.*.actual_revenue.required'  => 'Il ricavo effettivo è obbligatorio e deve essere un numero.',
+        'total_revenue.required'           => 'Il ricavo totale è obbligatorio e deve essere un numero.',
+        'plus.required'                    => 'Il valore "Extra" è obbligatorio e deve essere un numero.',
+        'real_margin.required'             => 'Il margine reale è obbligatorio e deve essere un numero.',
+    ];
+
+    // validazione principale
+    $request->validate([
+        'showcase_name'              => 'nullable|string|max:255',
+        'showcase_date'              => 'required|date',
+        'template_action'            => 'nullable|in:none,template,both',
+        'items'                      => 'required|array|min:1',
+        'items.*.recipe_id'          => 'required|exists:recipes,id',
+        'items.*.price'              => 'required|numeric|min:0',
+        'items.*.quantity'           => 'required|integer|min:0',
+        'items.*.sold'               => 'required|integer|min:0',
+        'items.*.reuse'              => 'required|integer|min:0',
+        'items.*.waste'              => 'required|integer|min:0',
+        'items.*.potential_income'   => 'required|numeric|min:0',
+        'items.*.actual_revenue'     => 'required|numeric|min:0',
+        'total_revenue'              => 'required|numeric|min:0',
+        'plus'                       => 'required|numeric',
+        'real_margin'                => 'required|numeric',
+    ], $messages);
+
+    // se salvo come modello, il nome diventa obbligatorio
+    if (in_array($request->template_action, ['template', 'both'])) {
         $request->validate([
-            'showcase_name'              => 'nullable|string|max:255',
-            'showcase_date'              => 'required|date',
-            'template_action'            => 'nullable|in:none,template,both',
-
-            // item lines
-            'items'                      => 'required|array|min:1',
-            'items.*.recipe_id'          => 'required|exists:recipes,id',
-            'items.*.price'              => 'required|numeric|min:0',
-            'items.*.quantity'           => 'required|integer|min:0',
-            'items.*.sold'               => 'required|integer|min:0',
-            'items.*.reuse'              => 'required|integer|min:0',
-            'items.*.waste'              => 'required|integer|min:0',
-            'items.*.potential_income'   => 'required|numeric|min:0',
-            'items.*.actual_revenue'     => 'required|numeric|min:0',
-
-            // summary fields from the form
-            'total_revenue'              => 'required|numeric|min:0',
-            'plus'                       => 'required|numeric',
-            'real_margin'                => 'required|numeric',
+            'showcase_name' => 'required|string|max:255',
+        ], [
+            'showcase_name.required' => 'Il nome della vetrina è obbligatorio quando si salva come modello.',
         ]);
-
-        // if saving as a template, name becomes required
-        if (in_array($request->template_action, ['template', 'both'])) {
-            $request->validate([
-                'showcase_name' => 'required|string|max:255',
-            ]);
-        }
-
-        $data    = $request->all();
-        $userId  = Auth::id();
-        $saveTpl = in_array($data['template_action'], ['template', 'both']);
-
-        // update the parent exactly as store() does
-        $showcase->update([
-            'showcase_name'             => $data['showcase_name']             ?? null,
-            'showcase_date'             => $data['showcase_date'],
-            'template_action'           => $data['template_action'],
-            'save_template'             => $saveTpl,
-            'break_even'                => $data['break_even'],               // pulled from form
-            'total_revenue'             => $data['total_revenue'],            // from form
-            'plus'                      => $data['plus'],                     // from form
-            'potential_income_average'  => 0,                                  // same as store()
-            'real_margin'               => $data['real_margin'],              // from form
-            'user_id'                   => $userId,
-        ]);
-
-        // drop & recreate all the lines, just like store()
-        $showcase->recipes()->delete();
-        foreach ($data['items'] as $item) {
-            ShowcaseRecipe::create([
-                'showcase_id'     => $showcase->id,
-                'recipe_id'       => $item['recipe_id'],
-                'price'           => $item['price'],
-                'quantity'        => $item['quantity'],
-                'sold'            => $item['sold'],
-                'reuse'           => $item['reuse'],
-                'waste'           => $item['waste'],
-                'potential_income' => $item['potential_income'],
-                'actual_revenue'  => $item['actual_revenue'],
-                'user_id'         => $userId,
-            ]);
-        }
-
-        return redirect()
-            ->route('showcase.index')
-            ->with('success', 'Vetrina aggiornata con successo.');
     }
+
+    $data    = $request->all();
+    $userId  = Auth::id();
+    $saveTpl = in_array($data['template_action'], ['template', 'both']);
+
+    // aggiorna la vetrina
+    $showcase->update([
+        'showcase_name'            => $data['showcase_name']             ?? null,
+        'showcase_date'            => $data['showcase_date'],
+        'template_action'          => $data['template_action'],
+        'save_template'            => $saveTpl,
+        'break_even'               => $data['break_even'],
+        'total_revenue'            => $data['total_revenue'],
+        'plus'                     => $data['plus'],
+        'potential_income_average' => 0,
+        'real_margin'              => $data['real_margin'],
+        'user_id'                  => $userId,
+    ]);
+
+    // rimuovi e ricrea tutte le righe
+    $showcase->recipes()->delete();
+    foreach ($data['items'] as $item) {
+        ShowcaseRecipe::create([
+            'showcase_id'      => $showcase->id,
+            'recipe_id'        => $item['recipe_id'],
+            'price'            => $item['price'],
+            'quantity'         => $item['quantity'],
+            'sold'             => $item['sold'],
+            'reuse'            => $item['reuse'],
+            'waste'            => $item['waste'],
+            'potential_income' => $item['potential_income'],
+            'actual_revenue'   => $item['actual_revenue'],
+            'user_id'          => $userId,
+        ]);
+    }
+
+    return redirect()
+        ->route('showcase.index')
+        ->with('success', 'Vetrina aggiornata con successo.');
+}
+
 
 
    public function getTemplate($id)
